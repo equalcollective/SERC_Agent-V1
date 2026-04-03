@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "notion": {
+      "type": "url",
+      "url": "https://mcp.notion.com/mcp",
+      "name": "notion"
+    },
+    "mb-onboarding": {
+      "type": "url",
+      "url": "https://mb-onboarding.replit.app/mcp/mcp",
+      "name": "mb-onboarding"
+    },
+    "sqp-merchantbots": {
+      "type": "url",
+      "url": "https://sqp-merchantbots.replit.app/mcp",
+      "name": "sqp-merchantbots"
+    },
+    "metabase-mcp": {
+      "command": "uvx",
+      "args": [
+        "metabase-mcp"
+      ],
+      "env": {
+        "METABASE_URL": "https://metabase.equalcollective.com",
+        "METABASE_API_KEY": "mb_v4FUDgHx+kyqvKfPKNVPlGXWKwR5wcgMt+7TNAnuK4U="
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(brew list:*)"
+    ]
+  }
+}
