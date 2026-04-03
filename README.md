@@ -1,62 +1,63 @@
 # SERC Agent V1
 
-**Structured Equal Review & Check Agent** — An AI-powered system that runs weekly account checks for Amazon brands managed by Equal Collective.
+**Structured Equal Review & Check** — A centralized prompt and context repo for all AI-powered automations at Equal Collective.
 
-## What it does
+This repo is the single source of truth for every prompt, context file, and rule that powers our Claude Code agents. Account checks, campaign analysis, negative keyword runs, and any future automation — all prompts live here.
 
-SERC pulls data from 4 sources, analyzes what changed and why, and writes a structured account check to Notion — ready for the Account Manager to review and act on.
+## Data Sources
 
-### Data Sources
+All prompts in this repo can pull from these 4 MCP-connected sources:
+
 | Source | What it provides |
 |--------|-----------------|
-| **Notion** | Brand context (goals, budgets, COGS), previous account check history, AM action logs |
-| **MB-Onboarding** | Account & product-level metrics — revenue, TACoS, sessions, CVR, ROAS, organic %, and more |
-| **Metabase** | Campaign-level data — spend, ACOS, CPC per campaign; search terms; placement reports; inventory |
+| **Notion** | Brand context, task history, AM action logs, client notes |
+| **MB-Onboarding** | Account & product metrics — revenue, TACoS, sessions, CVR, ROAS, organic %, etc. |
+| **Metabase** | Campaign data — spend, ACOS, CPC per campaign; search terms; placements; inventory |
 | **SQP (MerchantBots)** | Search query performance — impression share, click share, purchase share per tag |
-
-### Output Structure
-Each account check writes a Notion task with:
-- **30-second summary** — what happened, why, what to do today
-- **A — Metrics & Alerts** — account-level table with inline alerts and actions
-- **B — Campaign Intelligence** — auto vs manual split, campaign performance with insights, top search terms, placement analysis
-- **C — Client Context** — TACoS target, COGS, budget, goals
-- **D — Last Week's Actions** — verdict on every previous action (Worked / Failed / Inconclusive)
-- **E — Investigation Notes** — flagged questions for the AM to fill in
-- **F — Actions Taken** — AM logs what they changed this week
 
 ## Project Structure
 
 ```
-├── CLAUDE.md                    # Instructions for Claude Code
+├── CLAUDE.md                        # Master instructions for Claude Code
 ├── prompts/
-│   └── account_check.md         # Main account check prompt (V3)
+│   └── account_check.md             # Weekly account check (V3)
+│   └── (future prompts go here)
 ├── context/
-│   ├── brand_names.md           # Canonical brand name list
-│   ├── framework.md             # Metric thresholds & causality chains
-│   └── output_rules.md          # Output formatting rules
+│   ├── brand_names.md               # Canonical brand name list
+│   ├── framework.md                 # Metric thresholds & causality chains
+│   └── output_rules.md              # Output formatting rules
 └── README.md
 ```
 
-## How to run
+### Directories
 
-This agent runs inside [Claude Code](https://claude.ai/claude-code). To run an account check:
+- **`prompts/`** — Each prompt is a self-contained instruction set for a specific automation. New prompts get added here as we build more workflows.
+- **`context/`** — Shared reference files that prompts pull from. Brand names, metric thresholds, formatting rules — anything reusable across multiple prompts.
+- **`CLAUDE.md`** — The entry point. Tells Claude Code which files to read before executing any command.
+
+## Current Prompts
+
+### Account Check (`prompts/account_check.md`)
+Runs a structured weekly review for an Amazon brand. Pulls metrics, traces causality, checks AM actions, and writes a full report to Notion.
 
 ```
 run_account_check --brand "Brand Name" --week "YYYY-MM-DD"
 ```
 
-Or run all brands for an Account Manager:
-
+Run all brands for an AM:
 ```
 run account checks for all brands assigned to [AM name]
 ```
 
-## Key concepts
+### More coming
+As we build new automations (negative keyword runs, campaign audits, listing reviews, etc.), each will get its own prompt file in `prompts/` and an entry in this README.
 
-- **CRITICAL / WARNING / CLEARED** — every metric is classified each week based on WoW change and hard floors
-- **Causality mapping** — when a metric moves >10%, the agent traces it back to AM actions or campaign changes
-- **AM Action Log** — the agent reads the last 4 weeks of actions to connect past changes to current results
-- **Partial week detection** — if the latest week has incomplete data, it's shown in a collapsed toggle, not the main table
+## How it works
+
+1. **CLAUDE.md** routes the command to the right prompt file
+2. The prompt file defines the steps, data to pull, analysis to run, and output format
+3. **Context files** provide shared rules (thresholds, brand names, formatting)
+4. The agent executes against live MCP data and writes output to Notion
 
 ## Built by
 [Equal Collective](https://equalcollective.com) — Amazon growth agency
