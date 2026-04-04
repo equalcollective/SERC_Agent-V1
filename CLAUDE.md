@@ -1,7 +1,23 @@
-# MerchantBots Agent
+# SERC Agent — Command Registry
 
-When running account_check: read prompts/account_check.md first.
-For brand names: read context/brand_names.md.
-For output rules: read context/output_rules.md.
+## Before Any Command
 
-Always read the relevant file before starting any command.
+1. Read `context/brand_names.md` to resolve brand names to seller IDs.
+2. Read `context/amazon.md` for platform domain knowledge.
+3. Read the prompt file and all listed context files completely before starting execution.
+4. Never invent data. All numbers come from MCP tools.
+
+## Commands
+
+| Command | Prompt File | Context Files |
+|---------|------------|---------------|
+| `run_account_check --brand "[name]" --week "[YYYY-MM-DD]"` | `prompts/account_check.md` | `amazon.md`, `framework.md`, `output_rules.md` |
+
+## Context Files
+
+| File | Purpose |
+|------|---------|
+| `context/amazon.md` | Amazon platform mechanics — how ads, Buy Box, organic rank, inventory, halo effect, and SQP work |
+| `context/framework.md` | Metric thresholds, causality chains, trend rules, follow-up escalation, budget pacing |
+| `context/output_rules.md` | Strict formatting rules for all Notion output |
+| `context/brand_names.md` | Canonical brand name → seller ID mapping across systems |
