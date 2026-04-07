@@ -1,28 +1,69 @@
-# Framework Reference
+# Alert Framework V1
 
-## Metric check thresholds
+## Alert Metrics (Tier 1 — generate alerts)
 
-- CRITICAL: >20% negative WoW, OR hard floor breached
-- WARNING: 10–20% negative WoW
-- CLEARED: within normal range or improving
+These 6 metrics are checked every week. Use judgment to flag — no rigid percentage thresholds. Compare WoW, compare to 4-week average, consider the brand's context.
 
-Hard floors:
+### Revenue
+- Data: `br_total_sales`
+- Why: the ultimate business outcome. If revenue drops and nobody notices, nothing else matters.
+- Flag when: significant decline WoW, especially if also below 4wk avg. Also flag significant growth.
 
-- Buy Box %: below 90% on any active product = CRITICAL
-- ROAS: below 1.0 = CRITICAL
-- Campaign ACOS: above 60% = WARNING (or above break-even if COGS available from Products DB)
+### TACoS
+- Data: `cr_tacos_pct`
+- Why: TACoS connects ad spend to total revenue. Rising TACoS means ads are eating a bigger share of sales.
+- Flag when: significant increase WoW, or sustained multi-week rise. Also flag if TACoS is meaningfully above 4wk avg.
+- Always show WoW direction and vs 4wk avg
 
-## Known causality chains (reference only)
+### Organic %
+- Data: `cr_organic_pct`
+- Why: answers "is the brand building equity or renting traffic?" Declining organic % = ad dependency.
+- Flag when: meaningful drop in percentage points WoW, or sustained multi-week decline. Below 30% and declining = serious.
 
-These are common patterns on Amazon. Use them only when the data clearly supports a connection — do not speculate.
+### Buy Box %
+- Data: `br_featured_offer_pct`
+- Why: losing Buy Box is the most destructive event for a listing. Everything collapses.
+- Hard floor: below 90% = always flag (Amazon platform reality)
+- Also flag: significant drop WoW even if still above 90%
 
-- Bid increased → CPC up → Spend up → TACoS up (if revenue flat or down)
-- Bid decreased → CPC down → Impressions down → Sessions down → Revenue down
-- Budget hitting cap → Impressions cut mid-day → Sessions drop → Revenue drop
-- Listing change (image/title/price) → CTR or CVR changes → Revenue changes
-- Price increase → CVR drops → Buy Box % may drop
-- Buy Box % drops → CVR drops → ROAS drops → Revenue drops
+### CVR
+- Data: `br_cvr_pct`
+- Why: the conversion bottleneck. If traffic is fine but CVR drops, the listing is failing.
+- Flag when: notable drop WoW, especially if combined with being below 4wk avg.
 
-## Active product definition
+### Sessions
+- Data: `br_sessions`
+- Why: sessions = traffic. Drop in sessions means fewer people are seeing the product.
+- Flag when: significant drop WoW, especially if also below 4wk avg.
 
-A product is active if: sessions > 0 in at least 2 of the last 4 weeks.
+---
+
+## Context Metrics (Tier 2 — show, no alerts)
+
+Ad Spend, CPC, Impressions, CTR, ACOS, ROAS
+
+Show this week vs last week. No notes, no alerts. These are for AM reference.
+
+---
+
+## Campaign Alerts (2-check model)
+
+For each campaign, run 2 independent checks:
+
+1. **Spend efficiency**: Spend up significantly but orders flat or down? Flag.
+2. **Direction**: ACOS worsening WoW? Flag.
+
+Status per campaign: ⚠️ if either check fires, ✅ if neither fires.
+
+---
+
+## AM Actions
+
+Read last week's Actions & Follow-ups from Tasks DB. Note what the AM did. No connection analysis — just record what was done for context.
+
+---
+
+## Missing Data
+
+- No prior Account Check → "First check for this brand." Skip last week section.
+- Metric returns null → show as-is, do not alert, flag "Data unavailable"

@@ -18,6 +18,6 @@
 | File | Purpose |
 |------|---------|
 | `context/amazon.md` | Amazon platform mechanics — how ads, Buy Box, organic rank work |
-| `context/framework.md` | Metric alert thresholds and hard floors for classification |
+| `context/framework.md` | Alert framework — 6 alert metrics, campaign 2-check model |
 | `context/output_rules.md` | Formatting rules for Notion output |
 | `context/brand_names.md` | Canonical brand name → seller ID mapping across systems |

@@ -1,16 +1,15 @@
-# Output Rules — Always Apply
+# Output Rules
 
-1. Never invent numbers. Only use data from MCPs.
-2. Every CRITICAL or WARNING metric must have actual numbers in the Notes / Alerts column.
-3. Only add a cause or suggestion in Notes / Alerts if confident based on visible data. If not confident, just state the movement — the AM will investigate.
-4. No framework labels in the output. No R1/R2/R3. Plain language only.
-5. Alerts live inside the Metrics & Alerts table (Notes / Alerts column). There is no separate Alerts section.
-6. Campaigns section: show ALL campaigns with key metrics and WoW changes. Flag with 🔴/⚠️/✅.
-7. Context section: always a two-column table. Never prose.
-8. Last Week section: reproduce the actions taken and alerts from the prior check.
-9. The 30-second callout must use bullet points (What happened / Why if clear / Watch). "Why" only if confident — omit the line entirely if uncertain.
-10. Symbol legend (🔴 ⚠️ ✅) must appear above the Metrics & Alerts table.
-11. If TACoS target missing: warning flag in the Context section.
-12. Assignee: read the **Account Owner** property from Brands DB. Resolve the user ID to a name using `notion-get-users`. Only the Account Owner property determines the assignee.
-13. Investigation section: always present but left empty. It is a placeholder for the AM or future investigation procedure.
-14. Actions & Follow-ups section: always present as an empty table for the AM to fill in.
+1. Never invent numbers. All data from MCPs.
+2. Alert table: ALWAYS 6 rows — Revenue, TACoS, Organic %, Buy Box %, CVR, Sessions. Never skip a row even if healthy. Must include WoW Change column and Trend (4wk) column. If data unavailable, show "Data unavailable" in Notes. Notes: `→ [one sentence]` when flagged, blank if healthy.
+3. WoW Change for percentage metrics (TACoS, Organic %, Buy Box %, CVR): show raw point change (e.g., −9.1), not relative %. For absolute metrics (Revenue, Sessions): show ±%.
+4. Context metrics table: ALWAYS 6 rows — Ad Spend, ACOS, ROAS, CTR, CPC, Impressions. Never skip a row. This week vs Last week only. No notes. If data unavailable, show "Data unavailable".
+5. Campaign table: two rows per campaign (This Wk / Last Wk stacked). Blank row between campaigns. Notes only when 2-check flags.
+6. New campaigns (no prior week data) → flag "→ New campaign." Missing campaigns → flag "→ Not active this week."
+7. Context section: two-column table. Show ⚠️ Not set for any empty field.
+8. Top callout: bullet points (What happened / Why if clear / Watch). Omit "Why" if uncertain.
+9. Assignee: Account Owner from Brands DB → resolve via `notion-get-users`.
+10. Investigation section: always present, always empty.
+11. Actions & Follow-ups: always present as empty table.
+12. Last Week section: reproduce AM actions and alerts from prior check. No analysis.
+13. Every word must add information the AM cannot already see in the table. No filler.
