@@ -1,6 +1,6 @@
 # Weekly Check — Alerting
 
-Read context/amazon.md, context/brand_names.md, context/framework.md, and context/output_rules.md before starting.
+Read context/brand_names.md, context/framework.md, and context/output_rules.md before starting.
 
 You run weekly alerting for Equal Collective, an Amazon agency. Pull numbers, flag what changed, write to Notion. The AM investigates and decides.
 
@@ -14,8 +14,8 @@ The date is the **Sunday** that starts the check week (Sun–Sat).
 
 Read from Notion:
 
-1. **Brands DB** — Client Goals, Important Notes, Marketplace, Account Owner (→ Assignee)
-2. **Tasks DB** — Last week's Account Check: what AM changed (Actions & Follow-ups), what was flagged (alerts)
+1. **Brands DB** (https://www.notion.so/4787ea572a9544c691e029c12b6afeac) — Client Goals, Important Notes, Account Owner (→ Assignee)
+2. **Tasks DB** (https://www.notion.so/fdada86ca84a4d04881afefd828eb17c) — Last week's Account Check: what AM changed (Actions & Follow-ups), what was flagged (alerts)
 
 ---
 
@@ -23,30 +23,18 @@ Read from Notion:
 
 1. Resolve brand → seller_id via `metrics_list_sellers`
 2. Pull **alert metrics** — 12 weeks of weekly data: Revenue, TACoS, Organic %, Buy Box %, CVR, Sessions
-3. Calculate **12-week median** for each alert metric (the baseline)
-4. Pull **context metrics** WoW: Ad Spend, CPC, ACOS, ROAS, CTR, Impressions
-5. Pull **campaign metrics** WoW (all campaigns): Spend, ACOS, Orders, Sales, ROAS
-6. Classify alert metrics using framework.md — check WoW, 4-week trend, vs 12-week median, and consecutive decline rule
-7. Flag campaigns using the 2-check model from framework.md
+3. Pull **context metrics** WoW: Ad Spend, CPC, ACOS, ROAS, CTR, Impressions
+4. Format the 12 weeks of alert metric data + current week values as JSON and run: `python3 scripts/spc_baseline.py '<json>'`
+5. Read the script's JSON output — use `position` and `decline_flag` fields to classify each alert metric per framework.md
 
 ---
 
 ## Output → Notion Task
 
+Create in **Tasks DB** (https://www.notion.so/fdada86ca84a4d04881afefd828eb17c).
+
 **Title:** "[Brand] — Account Check — Week of [date]"
 **Properties:** Type: Account Check | Brand: linked | Assignee: AM from Step 1 | Due: today
-
----
-
-**[RED/AMBER/GREEN callout]**
-
-**RED** = something is broken or brand is losing money — look today
-**AMBER** = something trending wrong — investigate this week
-**GREEN** = all healthy — no action needed
-
-- **What happened:** [one bullet — key movement with numbers]
-- **Why (if clear):** [omit if uncertain]
-- **Watch:** [what metric to check first]
 
 ---
 
@@ -56,7 +44,6 @@ Read from Notion:
 |---|---|
 | Client Goals | [value or ⚠️ Not set] |
 | Important Notes | [value or ⚠️ Not set] |
-| Marketplace | [value] |
 
 Show ⚠️ Not set for any empty field.
 
@@ -68,7 +55,7 @@ Show ⚠️ Not set for any empty field.
 
 | Metric | This Week | Last Week | WoW Change | Trend (4wk) | vs Baseline | Notes |
 |--------|-----------|-----------|------------|-------------|-------------|-------|
-| Revenue | $X | $Y | ±% | $W1→W2→W3→W4 ↗↘ | 12wk med: $Z | |
+| Revenue | $X | $Y | ±% | $W1→W2→W3→W4 ↗↘ | 12wk avg: $Z | |
 | TACoS | | | | | | |
 | Organic % | | | | | | |
 | Buy Box % | | | | | | |
@@ -77,7 +64,7 @@ Show ⚠️ Not set for any empty field.
 
 **Trend column:** Show most recent 4 weekly values with arrows between them, plus a direction arrow at the end (↗ rising, ↘ declining, → flat). Example: `$4,536→3,499→2,218→2,199 ↘`
 
-**vs Baseline:** Show the 12-week median. If current week is meaningfully different, this reinforces the flag. Example: `12wk med: 8.7%` when current is 6.6%.
+**vs Baseline:** Show the 12-week average from the SPC script output. When current week is outside control limits, also show the breached limit. Example: `12wk avg: 8.7% (UCL: 10.2%)` when current is 10.5%.
 
 **WoW Change:** For metrics that are already percentages (TACoS, Organic %, Buy Box %, CVR), show the raw point change (e.g., −9.1). For absolute metrics (Revenue, Sessions), show ±%.
 
@@ -99,27 +86,6 @@ Reference only — no alerts. **ALWAYS show ALL 6 rows.** If a metric has no dat
 | CTR | | |
 | CPC | | |
 | Impressions | | |
-
----
-
-## Campaigns
-
-Overview for AM. AM investigates and takes action on flagged campaigns separately.
-
-Show two rows per campaign — This Week and Last Week stacked — so the AM can compare vertically. Add a blank row between campaigns for visual separation.
-
-| Campaign | Week | Spend | ACOS | Orders | ROAS | Notes |
-|----------|------|-------|------|--------|------|-------|
-| Campaign A | This Wk | | | | | |
-| | Last Wk | | | | | |
-| | | | | | | |
-| Campaign B | This Wk | | | | | |
-| | Last Wk | | | | | |
-
-If a campaign exists this week but did not exist last week → note: "→ New campaign, no prior week data"
-If a campaign existed last week but not this week → note: "→ Campaign not active this week"
-
-Flag using 2-check model. `→ [one sentence]` only when flagged. Blank if healthy.
 
 ---
 

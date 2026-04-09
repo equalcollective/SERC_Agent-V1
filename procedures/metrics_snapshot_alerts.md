@@ -1,7 +1,7 @@
 # Procedure: Metrics Snapshot + Alerts
 
 **Kind:** Sequential
-**Status:** V1 — Active
+**Status:** V2 — Active
 **Notion page:** [Procedure: Metrics Snapshot + Alerts](https://www.notion.so/33afde5f52828133981ff3341958804d)
 **Prompt file:** `prompts/account_check.md`
 
@@ -26,9 +26,9 @@ This procedure needs data from two places: Notion (brand context) and the Metric
 
 ### Part A — Brand context from Notion (collected by Procedure 1: Pull Context)
 
-Before this procedure runs, Procedure 1 reads from three Notion databases and assembles the brand's context. Here's exactly where each piece comes from:
+Before this procedure runs, Procedure 1 reads from two Notion databases and assembles the brand's context. Here's exactly where each piece comes from:
 
-**1. Brands database** (one row per client)
+**1. Brands database** (https://www.notion.so/4787ea572a9544c691e029c12b6afeac)
 
 The system finds the brand's row and reads these properties:
 
@@ -36,15 +36,14 @@ The system finds the brand's row and reads these properties:
 |----------|-----------|---------------|
 | **Client Goals** | One-line description of what the client wants (e.g., "Profitability only" or "Scale to $50K/month") | Shown in the Context section so the AM remembers what they're optimizing for. |
 | **Important Notes** | Any constraints, conditions, or things to watch (e.g., "Client pausing in Q4", "Don't touch listing without approval") | Shown in Context for AM reference. |
-| **Marketplace** | Which Amazon marketplace: US, UK, CA, EU, or IN | Determines which metrics-engine data to query. |
 | **Account Owner** | The person (Notion user) assigned to manage this brand | Becomes the Assignee on the output task. Resolved from a user ID to a name. |
 
-**2. Tasks database** (all work items)
+**2. Tasks database** (https://www.notion.so/fdada86ca84a4d04881afefd828eb17c)
 
 The system searches for the most recent Account Check task for this brand. From that task's page content, it extracts:
 
 - **Actions & Follow-ups section** — a table where the AM logged what they changed last week (e.g., "Increased bids on Campaign X", "Changed main image on Product Y"). This is reproduced in the "Last Week" section of the new check.
-- **Alerts from the Metrics & Alerts table** — which metrics were flagged as critical or warning last week. This is also reproduced so the AM can see whether last week's problems got better or worse.
+- **Alerts from the Metrics & Alerts table** — which metrics were flagged last week. This is also reproduced so the AM can see whether last week's problems got better or worse.
 
 If no previous Account Check task exists for this brand, the system notes "First check for this brand" and skips the Last Week section.
 
@@ -53,9 +52,8 @@ If no previous Account Check task exists for this brand, the system notes "First
 The Metrics Engine is an API (accessed via MCP) that holds all the Amazon numbers. It requires a **seller ID** and **marketplace** to run any query.
 
 - **Seller ID** — The system looks up the brand name in the Metrics Engine to get the seller ID. This mapping is also listed in `context/brand_names.md` as a reference.
-- **Account-level metrics (check week vs prior week)** — A side-by-side comparison: what each metric was this week vs last week, plus the absolute and percentage change.
-- **Account-level metrics (last 4 weeks, weekly)** — Four weekly data points used to calculate a 4-week rolling average. This average is the baseline for "what's normal for this brand."
-- **Campaign-level metrics (check week vs prior week)** — The same side-by-side comparison, but broken down per advertising campaign. Every campaign is included.
+- **Account-level alert metrics (12 weeks, weekly)** — 12 weekly data points used to compute statistical baselines via the SPC script.
+- **Account-level context metrics (check week vs prior week)** — A side-by-side comparison of supporting metrics for AM reference.
 
 ---
 
@@ -63,10 +61,7 @@ The Metrics Engine is an API (accessed via MCP) that holds all the Amazon number
 
 ### Step 1 — Pull alert metrics
 
-Query the Metrics Engine for 6 metrics that generate alerts. Get two views:
-
-1. **This week vs last week** — a direct comparison showing the change
-2. **Last 4 weeks** — to calculate a rolling average as a baseline
+Query the Metrics Engine for 6 metrics that generate alerts. Get **12 weeks of weekly data** for the SPC baseline computation.
 
 The 6 alert metrics are:
 
@@ -81,7 +76,7 @@ The 6 alert metrics are:
 
 ### Step 2 — Pull context metrics
 
-In the same query, also pull 6 supporting metrics. These are **not** alerted on — they're shown for reference so the AM can glance at them without running a separate report.
+In the same query, also pull 6 supporting metrics (this week vs last week). These are **not** alerted on — they're shown for reference so the AM can glance at them without running a separate report.
 
 | Metric | What it measures |
 |--------|-----------------|
@@ -92,103 +87,65 @@ In the same query, also pull 6 supporting metrics. These are **not** alerted on 
 | CPC | Cost per click on ads |
 | Impressions | How many times ads were shown |
 
-### Step 3 — Pull campaign metrics
+### Step 3 — Run SPC baseline script
 
-Query the Metrics Engine for **all campaigns**, this week vs last week. Metrics per campaign: Spend, ACOS, Orders, Sales, ROAS.
+Format the 12 weeks of alert metric data + current week values as JSON and run:
 
-Every campaign is shown — not just flagged ones. The AM needs the full picture.
+```
+python3 scripts/spc_baseline.py '<json>'
+```
+
+The script computes for each metric: mean, standard deviation, upper control limit (UCL = mean + 2σ), lower control limit (LCL = mean − 2σ), consecutive decline count, and position classification.
+
+Read the JSON output. See `context/framework.md` for the full input/output schema.
 
 ### Step 4 — Classify alert metrics
 
-For each of the 6 alert metrics, decide: is this **critical**, a **warning**, or **healthy**?
+For each of the 6 alert metrics, use the script's output to determine if it should be flagged:
 
-There are no rigid percentage thresholds. The system uses judgment by looking at:
-- How much did it change week over week?
-- How does it compare to the 4-week average?
-- What is the brand's context? (e.g., a profitability-focused brand vs a growth brand)
+- **`position` = `below_lcl` or `above_ucl`** → metric is outside normal statistical range. Flag it.
+- **`decline_flag` = `true`** → 3+ consecutive weeks of decline. Flag it even if within limits.
+- **TACoS is inverted**: `above_ucl` = bad (efficiency worsening).
+- **Buy Box % hard threshold**: Below 90% = always flag, regardless of SPC position.
 
-**Specific logic per metric:**
-
-- **Revenue** — Flag significant declines, especially if also below 4-week average. Also flag significant growth (growth is an opportunity).
-- **TACoS** — Flag significant increases WoW or sustained multi-week rises. TACoS rising means ads are eating a bigger share of sales.
-- **Organic %** — Flag meaningful drops in percentage points. A sustained multi-week decline is concerning. Below 30% and still declining is serious — the brand is heavily ad-dependent.
-- **Buy Box %** — Below 90% = always flag (this is an Amazon platform reality). Also flag significant drops even if still above 90%.
-- **CVR** — Flag notable drops, especially if CVR is also below the 4-week average.
-- **Sessions** — Flag significant drops, especially if below 4-week average.
-
-### Step 5 — Classify campaigns
-
-For each campaign, run 2 independent checks:
-
-1. **Spend efficiency** — Did spend go up significantly but orders stayed flat or went down? This means money is being wasted.
-2. **Direction** — Is ACOS worse than last week? This means the campaign is trending toward being less efficient.
-
-If either check fires → flag the campaign with a one-line note.
-If neither fires → campaign is healthy, no note needed.
-
-### Step 6 — Determine overall severity
-
-Based on all the alert classifications:
-- **RED** — Something is broken or the brand is losing money. AM should look at this **today**.
-- **AMBER** — Something is trending in the wrong direction. AM should investigate **this week**.
-- **GREEN** — All metrics are healthy. No action needed.
-
-A short explanation of what RED/AMBER/GREEN means is included at the top of the output so that someone reading for the first time understands the severity levels.
+The script's `summary.flagged_metrics` field lists all metrics that triggered. Use this as the starting point, then apply the Buy Box hard threshold check.
 
 ---
 
 ## Output
 
-The output is a new **Account Check task** created in the Notion Tasks database. It is linked to the brand, assigned to the Account Manager, and due today.
+The output is a new **Account Check task** created in the Notion Tasks database (https://www.notion.so/fdada86ca84a4d04881afefd828eb17c). It is linked to the brand, assigned to the Account Manager, and due today.
 
 **Task title:** "[Brand] — Account Check — Week of [date]"
-**Task properties:** Type = Account Check, Brand = linked, Assignee = AM, Due = today, Priority = High
+**Task properties:** Type = Account Check, Brand = linked, Assignee = AM, Due = today
 
 **The task page contains these sections, in order:**
 
-### 1. Top callout (RED/AMBER/GREEN)
-
-A colored callout box at the very top. Color matches severity. Contains a 30-second summary in bullet points:
-- **What happened** — the single most important metric movement, with actual numbers
-- **Why (if clear)** — only if the data clearly points to a cause. Omitted entirely if uncertain.
-- **Watch** — which metric the AM should look at first
-
-### 2. Context
+### 1. Context
 
 A two-column table showing the brand's key context:
 - Client Goals (or ⚠️ Not set)
 - Important Notes (or ⚠️ Not set)
-- Marketplace
 
 Show ⚠️ Not set for any empty field.
 
-### 3. Alerts
+### 2. Alerts
 
-A table with the 6 alert metrics. Columns: Metric, This Week, Last Week, WoW Change, Trend (4wk), Notes.
+A table with the 6 alert metrics. Columns: Metric, This Week, Last Week, WoW Change, Trend (4wk), vs Baseline, Notes.
 
 - **WoW Change:** For percentage metrics (TACoS, Organic %, Buy Box %, CVR) show raw point change (e.g., −9.1). For absolute metrics (Revenue, Sessions) show ±%.
 - **Trend (4wk):** All 4 weekly values with arrows between them, plus a direction arrow at the end. Example: `$4,536→3,499→2,218→2,199 ↘`. This replaces a graph — the AM sees the full trajectory at a glance.
+- **vs Baseline:** Show the 12-week average from the SPC script. When current is outside control limits, also show the breached limit. Example: `12wk avg: 8.7% (UCL: 10.2%)`.
 
 The **Notes** column is blank for healthy metrics. For flagged metrics: `→ [one sentence]`
 
 If all metrics are healthy: "No alerts this week."
 
-### 4. Context Metrics
+### 3. Context Metrics
 
 A smaller reference table showing the 6 context metrics. Columns: Metric, This Week, Last Week. No notes, no alerts — just the numbers for the AM to see.
 
-### 5. Campaigns
-
-Two rows per campaign — This Wk and Last Wk stacked vertically — with a blank separator row between campaigns. Columns: Campaign, Week, Spend, ACOS, Orders, ROAS, Notes.
-
-This is an overview. The AM investigates and takes action on flagged campaigns separately.
-
-- If a campaign is new this week (no prior data): "→ New campaign, no prior week data"
-- If a campaign existed last week but not this week: "→ Campaign not active this week"
-
-The Notes column uses `→ [one sentence]` format, only when the 2-check model flags something. Blank if healthy.
-
-### 6. Last Week
+### 4. Last Week
 
 Reproduces two things from the prior week's Account Check task:
 - What the AM changed (from Actions & Follow-ups)
@@ -196,14 +153,10 @@ Reproduces two things from the prior week's Account Check task:
 
 If this is the first check for the brand: "First check for this brand — no prior data."
 
-### 7. Investigation
-
-Always present. Always empty. This is a placeholder for the AM to write investigation notes, or for a future investigation procedure.
-
-### 8. Actions & Follow-ups
+### 5. Actions & Follow-ups
 
 Always present. An empty table for the AM to fill in:
 
-| What I changed | Before → After | Why | Expected outcome | Check on |
-|----------------|----------------|-----|------------------|----------|
-| | | | | |
+| Action | Why | Check by |
+|--------|-----|----------|
+| | | |

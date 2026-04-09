@@ -1,63 +1,112 @@
-# Alert Framework V1
+# Alert Framework V2 — Statistical Process Control
 
-Alert metrics checked every week. No rigid thresholds — use judgment based on WoW change, trend, and brand context.
+Alerts are driven by statistical control limits computed from 12 weeks of history, not subjective judgment. A Python script handles all math — the LLM reads its output and uses it to populate the alert table.
 
 ## Lookback & Baseline
 
-Pull **12 weeks** of weekly data for each alert metric. Display the most recent 4 in the trend column, but use all 12 to judge:
+Pull **12 weeks** of weekly data for each alert metric. Display the most recent 4 in the trend column.
 
-- **12-week median** = the baseline for what's "normal" for this brand. Compare current week to this median. If current is significantly below (or above for TACoS), flag it — even if WoW looks flat.
-- **Consecutive decline rule**: If a metric has declined 3+ consecutive weeks, flag it regardless of WoW direction. A small uptick after 4 weeks of decline is not recovery.
-
-These two rules prevent the system from "forgetting" a meaningful shift after the 4-week window moves past it.
-
-**Output format:**
-- **WoW Change:** Percentage metrics → raw point change. Absolute metrics → ±%.
-- **Trend (4wk):** Most recent 4 weekly values with arrows. Example: `$4,536→3,499→2,218→2,199 ↘`
-- **vs Baseline:** Show when current week is meaningfully different from 12-week median. Example: `12wk median: 8.7% — current 6.6%`
-- **Notes:** `→ [one sentence]` when flagged. Blank if healthy.
+- **12-week mean** = the baseline for what's "normal" for this brand.
+- **Control limits** = mean ± 2 standard deviations (UCL and LCL). Current week outside these limits = statistically unusual.
+- **Consecutive decline rule**: If a metric has declined 3+ consecutive weeks, flag it regardless of whether it's inside control limits. A small uptick after weeks of decline is not recovery.
 
 ---
 
-## Revenue
+## How to Run the Script
+
+After pulling 12 weeks of data, format it as JSON and run:
+
+```
+python3 scripts/spc_baseline.py '<json>'
+```
+
+**Input format:**
+```json
+{
+  "metrics": {
+    "Revenue": [w1, w2, ..., w12],
+    "TACoS": [w1, w2, ..., w12],
+    "Organic %": [...],
+    "Buy Box %": [...],
+    "CVR": [...],
+    "Sessions": [...]
+  },
+  "current_week": {
+    "Revenue": value,
+    "TACoS": value,
+    "Organic %": value,
+    "Buy Box %": value,
+    "CVR": value,
+    "Sessions": value
+  }
+}
+```
+
+Values in `metrics` are ordered oldest → newest (week 1 through week 12). `current_week` is this week's value.
+
+**Output fields per metric:**
+
+| Field | What it means |
+|-------|--------------|
+| `mean` | 12-week arithmetic mean |
+| `std_dev` | Population standard deviation |
+| `ucl` | Upper control limit (mean + 2σ) |
+| `lcl` | Lower control limit (mean − 2σ, floored at 0) |
+| `current` | This week's value |
+| `current_vs_mean_pct` | % difference from the mean |
+| `position` | `below_lcl`, `above_ucl`, or `within_limits` |
+| `consecutive_decline` | Number of consecutive declining weeks |
+| `decline_flag` | `true` if 3+ consecutive declines |
+
+**Fallback:** If the script fails or returns an error, note "SPC computation unavailable" in the output and skip baseline comparisons for that run.
+
+---
+
+## Alert Rules
+
+Use the script's `position` and `decline_flag` fields to classify each metric. Flag a metric when **any** of its conditions fire.
+
+### Revenue
 - Data: `br_total_sales`
-- Flag when: Significant decline WoW, especially if also below 12-week median. Also flag significant growth.
+- Flag when: `position` is `below_lcl` (significant decline) or `above_ucl` (significant growth). Flag when `decline_flag` is `true`.
 
-## TACoS
+### TACoS
 - Data: `cr_tacos_pct`
-- Flag when: Significant increase WoW, or sustained multi-week rise. Also flag if meaningfully above 12-week median.
+- **Inverted metric** — higher is worse.
+- Flag when: `position` is `above_ucl` (efficiency worsening). Flag when `decline_flag` is `true` (consecutive increases).
 
-## Organic %
+### Organic %
 - Data: `cr_organic_pct`
-- Flag when: Meaningful drop WoW. Sustained multi-week decline. Below 30% and declining = serious.
+- Flag when: `position` is `below_lcl`. Below 30% and below LCL = serious — the brand is heavily ad-dependent.
+- Flag when: `decline_flag` is `true`.
 
-## Buy Box %
+### Buy Box %
 - Data: `br_featured_offer_pct`
-- Flag when: Below 90% = always flag. Also flag significant drop WoW even if above 90%.
+- **Hard threshold**: Below 90% = ALWAYS flag, regardless of SPC position.
+- Also flag when: `position` is `below_lcl`.
+- Flag when: `decline_flag` is `true`.
 
-## CVR
+### CVR
 - Data: `br_cvr_pct`
-- Flag when: Notable drop WoW, especially combined with being below 12-week median. Flag if 3+ consecutive weeks of decline even if this week ticked up.
+- Flag when: `position` is `below_lcl`. Flag when `decline_flag` is `true`.
 
-## Sessions
+### Sessions
 - Data: `br_sessions`
-- Flag when: Significant drop WoW, especially if also below 12-week median.
+- Flag when: `position` is `below_lcl`. Flag when `decline_flag` is `true`.
 
 ---
 
-## Campaign Alerts (2-check model)
+## Output Format
 
-For each campaign, run 2 independent checks:
-
-1. **Spend efficiency**: Spend up significantly but orders flat or down? Flag.
-2. **Direction**: ACOS worsening WoW? Flag.
-
-Status per campaign: ⚠️ if either check fires, ✅ if neither fires.
+- **WoW Change:** Percentage metrics (TACoS, Organic %, Buy Box %, CVR) → raw point change (e.g., −9.1). Absolute metrics (Revenue, Sessions) → ±%.
+- **Trend (4wk):** Most recent 4 weekly values with arrows. Example: `$4,536→3,499→2,218→2,199 ↘`
+- **vs Baseline:** Show 12-week average from the script output. When current week is outside control limits, also show the breached limit. Example: `12wk avg: 8.7% (UCL: 10.2%)`
+- **Notes:** `→ [one sentence]` when flagged. Blank if healthy.
 
 ---
 
 ## Missing Data
 
-- No prior Account Check → "First check for this brand." Skip last week section.
+- No prior Account Check → "First check for this brand." Skip Last Week section.
 - Metric returns null → show as-is, do not alert, flag "Data unavailable"
-- Fewer than 12 weeks of data → use whatever is available, note "X weeks of history" next to baseline
+- Fewer than 3 weeks of history → script returns `insufficient_data`. Note "X weeks of history — insufficient for SPC" next to baseline.
