@@ -12,6 +12,8 @@
 | Command | Prompt File | Context Files |
 |---------|------------|---------------|
 | `run_account_check --brand "[name]" --week "[YYYY-MM-DD]"` | `prompts/account_check.md` | `amazon.md`, `framework.md`, `output_rules.md` |
+| `run_placement_check --brand "[name]" --week "[YYYY-MM-DD]"` | `prompts/placement_check.md` | `amazon.md`, `output_rules.md` |
+| `run_negative_cleanup --brand "[name]" --week "[YYYY-MM-DD]" --days [30\|60]` | `prompts/negative_cleanup.md` | `amazon.md`, `output_rules.md` |
 
 ## Context Files
 

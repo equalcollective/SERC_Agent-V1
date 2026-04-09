@@ -22,11 +22,12 @@ Read from Notion:
 ## Procedure 2 — Metrics Snapshot + Alerts
 
 1. Resolve brand → seller_id via `metrics_list_sellers`
-2. Pull **alert metrics** WoW + 4-week weekly data: Revenue, TACoS, Organic %, Buy Box %, CVR, Sessions
-3. Pull **context metrics** WoW: Ad Spend, CPC, ACOS, ROAS, CTR, Impressions
-4. Pull **campaign metrics** WoW (all campaigns): Spend, ACOS, Orders, Sales, ROAS
-5. Classify alert metrics using framework.md — use judgment, no rigid thresholds
-6. Flag campaigns using the 2-check model from framework.md
+2. Pull **alert metrics** — 12 weeks of weekly data: Revenue, TACoS, Organic %, Buy Box %, CVR, Sessions
+3. Calculate **12-week median** for each alert metric (the baseline)
+4. Pull **context metrics** WoW: Ad Spend, CPC, ACOS, ROAS, CTR, Impressions
+5. Pull **campaign metrics** WoW (all campaigns): Spend, ACOS, Orders, Sales, ROAS
+6. Classify alert metrics using framework.md — check WoW, 4-week trend, vs 12-week median, and consecutive decline rule
+7. Flag campaigns using the 2-check model from framework.md
 
 ---
 
@@ -65,18 +66,20 @@ Show ⚠️ Not set for any empty field.
 
 **ALWAYS show ALL 6 rows, even if healthy.** Never skip a row. If a metric has no data, show "Data unavailable" in the Notes column. Show the 4-week trend inline using arrow notation.
 
-| Metric | This Week | Last Week | WoW Change | Trend (4wk) | Notes |
-|--------|-----------|-----------|------------|-------------|-------|
-| Revenue | $X | $Y | ±% | $W1→W2→W3→W4 ↗↘ | |
-| TACoS | | | | | |
-| Organic % | | | | | |
-| Buy Box % | | | | | |
-| CVR | | | | | |
-| Sessions | | | | | |
+| Metric | This Week | Last Week | WoW Change | Trend (4wk) | vs Baseline | Notes |
+|--------|-----------|-----------|------------|-------------|-------------|-------|
+| Revenue | $X | $Y | ±% | $W1→W2→W3→W4 ↗↘ | 12wk med: $Z | |
+| TACoS | | | | | | |
+| Organic % | | | | | | |
+| Buy Box % | | | | | | |
+| CVR | | | | | | |
+| Sessions | | | | | | |
 
-**Trend column:** Show all 4 weekly values with arrows between them, plus a direction arrow at the end (↗ rising, ↘ declining, → flat). Example: `$4,536→3,499→2,218→2,199 ↘`
+**Trend column:** Show most recent 4 weekly values with arrows between them, plus a direction arrow at the end (↗ rising, ↘ declining, → flat). Example: `$4,536→3,499→2,218→2,199 ↘`
 
-**WoW Change:** For metrics that are already percentages (TACoS, Organic %, Buy Box %, CVR), show the raw point change (e.g., "48.5% → 39.4%" = −9.1 points, write as "−9.1"). For absolute metrics (Revenue, Sessions), show ±%.
+**vs Baseline:** Show the 12-week median. If current week is meaningfully different, this reinforces the flag. Example: `12wk med: 8.7%` when current is 6.6%.
+
+**WoW Change:** For metrics that are already percentages (TACoS, Organic %, Buy Box %, CVR), show the raw point change (e.g., −9.1). For absolute metrics (Revenue, Sessions), show ±%.
 
 **Notes:** `→ [one sentence]` only when flagged. Blank if healthy.
 
@@ -122,21 +125,17 @@ Flag using 2-check model. `→ [one sentence]` only when flagged. Blank if healt
 
 ## Last Week
 
-**AM actions:** [what AM changed last week — reproduce from prior check]
+**AM actions:** [what AM changed last week — reproduce from prior check's Actions & Follow-ups]
 **Alerts flagged:** [what was flagged last week]
 
 If first check: "First check for this brand — no prior data."
 
 ---
 
-## Investigation
-
-_Empty — for AM notes or future investigation procedure._
-
----
-
 ## Actions & Follow-ups
 
-| What I changed | Before → After | Why | Expected outcome | Check on |
-|----------------|----------------|-----|------------------|----------|
-| | | | | |
+| Action | Why | Check by |
+|--------|-----|----------|
+| | | |
+
+AM fills this in after reviewing. Not populated by the system.

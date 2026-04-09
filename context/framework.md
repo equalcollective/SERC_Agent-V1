@@ -1,48 +1,47 @@
 # Alert Framework V1
 
-## Alert Metrics (Tier 1 — generate alerts)
+Alert metrics checked every week. No rigid thresholds — use judgment based on WoW change, trend, and brand context.
 
-These 6 metrics are checked every week. Use judgment to flag — no rigid percentage thresholds. Compare WoW, compare to 4-week average, consider the brand's context.
+## Lookback & Baseline
 
-### Revenue
-- Data: `br_total_sales`
-- Why: the ultimate business outcome. If revenue drops and nobody notices, nothing else matters.
-- Flag when: significant decline WoW, especially if also below 4wk avg. Also flag significant growth.
+Pull **12 weeks** of weekly data for each alert metric. Display the most recent 4 in the trend column, but use all 12 to judge:
 
-### TACoS
-- Data: `cr_tacos_pct`
-- Why: TACoS connects ad spend to total revenue. Rising TACoS means ads are eating a bigger share of sales.
-- Flag when: significant increase WoW, or sustained multi-week rise. Also flag if TACoS is meaningfully above 4wk avg.
-- Always show WoW direction and vs 4wk avg
+- **12-week median** = the baseline for what's "normal" for this brand. Compare current week to this median. If current is significantly below (or above for TACoS), flag it — even if WoW looks flat.
+- **Consecutive decline rule**: If a metric has declined 3+ consecutive weeks, flag it regardless of WoW direction. A small uptick after 4 weeks of decline is not recovery.
 
-### Organic %
-- Data: `cr_organic_pct`
-- Why: answers "is the brand building equity or renting traffic?" Declining organic % = ad dependency.
-- Flag when: meaningful drop in percentage points WoW, or sustained multi-week decline. Below 30% and declining = serious.
+These two rules prevent the system from "forgetting" a meaningful shift after the 4-week window moves past it.
 
-### Buy Box %
-- Data: `br_featured_offer_pct`
-- Why: losing Buy Box is the most destructive event for a listing. Everything collapses.
-- Hard floor: below 90% = always flag (Amazon platform reality)
-- Also flag: significant drop WoW even if still above 90%
-
-### CVR
-- Data: `br_cvr_pct`
-- Why: the conversion bottleneck. If traffic is fine but CVR drops, the listing is failing.
-- Flag when: notable drop WoW, especially if combined with being below 4wk avg.
-
-### Sessions
-- Data: `br_sessions`
-- Why: sessions = traffic. Drop in sessions means fewer people are seeing the product.
-- Flag when: significant drop WoW, especially if also below 4wk avg.
+**Output format:**
+- **WoW Change:** Percentage metrics → raw point change. Absolute metrics → ±%.
+- **Trend (4wk):** Most recent 4 weekly values with arrows. Example: `$4,536→3,499→2,218→2,199 ↘`
+- **vs Baseline:** Show when current week is meaningfully different from 12-week median. Example: `12wk median: 8.7% — current 6.6%`
+- **Notes:** `→ [one sentence]` when flagged. Blank if healthy.
 
 ---
 
-## Context Metrics (Tier 2 — show, no alerts)
+## Revenue
+- Data: `br_total_sales`
+- Flag when: Significant decline WoW, especially if also below 12-week median. Also flag significant growth.
 
-Ad Spend, CPC, Impressions, CTR, ACOS, ROAS
+## TACoS
+- Data: `cr_tacos_pct`
+- Flag when: Significant increase WoW, or sustained multi-week rise. Also flag if meaningfully above 12-week median.
 
-Show this week vs last week. No notes, no alerts. These are for AM reference.
+## Organic %
+- Data: `cr_organic_pct`
+- Flag when: Meaningful drop WoW. Sustained multi-week decline. Below 30% and declining = serious.
+
+## Buy Box %
+- Data: `br_featured_offer_pct`
+- Flag when: Below 90% = always flag. Also flag significant drop WoW even if above 90%.
+
+## CVR
+- Data: `br_cvr_pct`
+- Flag when: Notable drop WoW, especially combined with being below 12-week median. Flag if 3+ consecutive weeks of decline even if this week ticked up.
+
+## Sessions
+- Data: `br_sessions`
+- Flag when: Significant drop WoW, especially if also below 12-week median.
 
 ---
 
@@ -57,13 +56,8 @@ Status per campaign: ⚠️ if either check fires, ✅ if neither fires.
 
 ---
 
-## AM Actions
-
-Read last week's Actions & Follow-ups from Tasks DB. Note what the AM did. No connection analysis — just record what was done for context.
-
----
-
 ## Missing Data
 
 - No prior Account Check → "First check for this brand." Skip last week section.
 - Metric returns null → show as-is, do not alert, flag "Data unavailable"
+- Fewer than 12 weeks of data → use whatever is available, note "X weeks of history" next to baseline
