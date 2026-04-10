@@ -1,121 +1,297 @@
 #!/usr/bin/env python3
-"""SPC baseline calculator for account check alerts.
+"""Account check analysis script.
 
-Takes 12 weeks of metric history + current week values, computes
-statistical process control baselines (mean, std dev, UCL, LCL),
-detects consecutive declines, and classifies each metric's position
-relative to control limits.
+Takes 12 weeks of metric data, computes output columns (This Week, Last Week,
+WoW Change, Trend 4wk), internal flags (SPC, 3-week consecutive, Buy Box
+threshold), and status signals. Returns structured JSON for the alert table.
 
 Usage:
     python3 scripts/spc_baseline.py '<json>'
     echo '<json>' | python3 scripts/spc_baseline.py
+
+Input JSON — keyed by metric key, each value is an array of weekly values
+(oldest → newest, last element = target week):
+
+    {
+      "br_total_sales": [w1, w2, ..., w12],
+      "cr_tacos_pct": [w1, w2, ..., w12],
+      "cr_organic_pct": [w1, w2, ..., w12],
+      "br_featured_offer_pct": [w1, w2, ..., w12],
+      "br_cvr_pct": [w1, w2, ..., w12],
+      "br_sessions": [w1, w2, ..., w12]
+    }
 """
 
 import json
 import sys
 import statistics
 
-# Metrics where higher values are worse (inverted alerting logic)
-INVERTED_METRICS = {"TACoS"}
+# Metric definitions in fixed row order
+METRICS = [
+    {
+        "key": "br_total_sales",
+        "display_name": "Revenue",
+        "format": "$",
+        "good_direction": "up",
+    },
+    {
+        "key": "cr_tacos_pct",
+        "display_name": "TACoS",
+        "format": "%",
+        "good_direction": "down",
+    },
+    {
+        "key": "cr_organic_pct",
+        "display_name": "Organic %",
+        "format": "%",
+        "good_direction": "up",
+    },
+    {
+        "key": "br_featured_offer_pct",
+        "display_name": "Buy Box %",
+        "format": "%",
+        "good_direction": "up",
+        "threshold": 90,
+    },
+    {
+        "key": "br_cvr_pct",
+        "display_name": "CVR",
+        "format": "%",
+        "good_direction": "up",
+    },
+    {
+        "key": "br_sessions",
+        "display_name": "Sessions",
+        "format": "#",
+        "good_direction": "up",
+    },
+]
 
-# Minimum weeks of history required for SPC computation
-MIN_WEEKS = 3
+
+def format_value(value, fmt):
+    """Format a value for display in the table."""
+    if value is None:
+        return "N/A"
+    if fmt == "$":
+        return f"${value:,.0f}"
+    elif fmt == "%":
+        return f"{value:.1f}%"
+    elif fmt == "#":
+        return f"{value:,.0f}"
+    return str(value)
 
 
-def compute_baseline(values, current, inverted=False):
-    """Compute SPC baseline for a single metric.
+def compute_wow_change(this_week, last_week, fmt):
+    """Compute week-over-week change as a formatted string.
 
-    Args:
-        values: List of historical weekly values (oldest → newest).
-        current: Current week's value.
-        inverted: If True, higher = worse (e.g. TACoS).
-
-    Returns:
-        Dict with mean, std_dev, ucl, lcl, position, etc.
+    $ and # metrics → percentage change (e.g. +12.3%)
+    % metrics → absolute point change (e.g. +2.1pp)
     """
-    weeks = len(values)
-    result = {
-        "mean": None,
-        "std_dev": None,
-        "ucl": None,
-        "lcl": None,
-        "current": current,
-        "current_vs_mean_pct": None,
-        "position": "insufficient_data",
-        "consecutive_decline": 0,
-        "decline_flag": False,
-        "weeks_of_history": weeks,
-    }
+    if this_week is None or last_week is None:
+        return "N/A"
 
-    if weeks < MIN_WEEKS:
-        return result
+    if fmt in ("$", "#"):
+        if last_week == 0:
+            return "N/A" if this_week == 0 else "+∞%"
+        pct = ((this_week - last_week) / abs(last_week)) * 100
+        sign = "+" if pct > 0 else ""
+        return f"{sign}{pct:.1f}%"
+    else:
+        diff = this_week - last_week
+        sign = "+" if diff > 0 else ""
+        return f"{sign}{diff:.1f}pp"
+
+
+def compute_trend_4wk(values, fmt):
+    """Compute 4-week trend: 4 data points + direction arrow.
+
+    Direction: ↗ if latest > earliest, ↘ if latest < earliest, → if change < 2%.
+    """
+    if len(values) < 4:
+        available = values[-len(values):]
+        formatted = [format_value(v, fmt) for v in available]
+        return " → ".join(formatted) + " →"
+
+    last_4 = values[-4:]
+    formatted = [format_value(v, fmt) for v in last_4]
+
+    earliest, latest = last_4[0], last_4[-1]
+    if earliest == 0:
+        arrow = "↗" if latest > 0 else "→"
+    else:
+        pct_change = abs((latest - earliest) / earliest)
+        if pct_change < 0.02:
+            arrow = "→"
+        elif latest > earliest:
+            arrow = "↗"
+        else:
+            arrow = "↘"
+
+    return " → ".join(formatted) + " " + arrow
+
+
+def compute_spc(values):
+    """Compute SPC baselines: mean, std dev, UCL, LCL, breach flags."""
+    if len(values) < 3:
+        return None
 
     mean = statistics.mean(values)
     std_dev = statistics.pstdev(values)
-
     ucl = mean + 2 * std_dev
     lcl = max(0, mean - 2 * std_dev)
 
-    # Percentage difference from mean
-    if mean != 0:
-        current_vs_mean_pct = round(((current - mean) / abs(mean)) * 100, 2)
-    else:
-        current_vs_mean_pct = None
+    current = values[-1]
 
-    # Classify position relative to control limits
-    if current > ucl:
-        position = "above_ucl"
-    elif current < lcl:
-        position = "below_lcl"
-    else:
-        position = "within_limits"
-
-    # Consecutive decline detection (walk from newest backward)
-    consecutive = detect_consecutive_decline(values, inverted)
-
-    result.update({
+    return {
         "mean": round(mean, 2),
         "std_dev": round(std_dev, 2),
         "ucl": round(ucl, 2),
         "lcl": round(lcl, 2),
-        "current_vs_mean_pct": current_vs_mean_pct,
-        "position": position,
-        "consecutive_decline": consecutive,
-        "decline_flag": consecutive >= 3,
-    })
-
-    return result
+        "spc_breach_above": current > ucl,
+        "spc_breach_below": current < lcl,
+    }
 
 
-def detect_consecutive_decline(values, inverted=False):
-    """Count consecutive weeks of decline from the most recent week backward.
+def compute_consecutive(values):
+    """Compute 3-week consecutive decline and increase flags.
 
-    For normal metrics, decline = value went down.
-    For inverted metrics (TACoS), decline = value went up (getting worse).
+    Checks the last 3 week-over-week transitions (requires 4 data points).
     """
-    if len(values) < 2:
-        return 0
+    if len(values) < 4:
+        return {"three_week_decline": False, "three_week_increase": False}
 
-    count = 0
-    for i in range(len(values) - 1, 0, -1):
-        if inverted:
-            # For TACoS: "decline" means value increased (worsening)
-            if values[i] > values[i - 1]:
-                count += 1
-            else:
-                break
-        else:
-            # For normal metrics: "decline" means value decreased
-            if values[i] < values[i - 1]:
-                count += 1
-            else:
-                break
+    last_4 = values[-4:]
+    decline = all(last_4[i + 1] < last_4[i] for i in range(3))
+    increase = all(last_4[i + 1] > last_4[i] for i in range(3))
 
-    return count
+    return {
+        "three_week_decline": decline,
+        "three_week_increase": increase,
+    }
+
+
+def compute_status(meta, this_week, last_week, spc, consecutive):
+    """Determine status signal (🟢/🟡/🔴) based on business meaning.
+
+    Rules:
+    - Buy Box < 90% → always 🔴
+    - SPC breach or 3-week streak in bad direction → 🔴
+    - SPC breach or 3-week streak in good direction → 🟢
+    - WoW improvement → 🟢, WoW decline → 🟡, flat → 🟢
+    - Tie-break: yellow/green → green, yellow/red → red
+    """
+    good_dir = meta["good_direction"]
+    threshold = meta.get("threshold")
+
+    breach_above = spc["spc_breach_above"] if spc else False
+    breach_below = spc["spc_breach_below"] if spc else False
+    three_decline = consecutive["three_week_decline"]
+    three_increase = consecutive["three_week_increase"]
+
+    # Buy Box special rule
+    if threshold is not None and this_week is not None and this_week < threshold:
+        return "🔴"
+
+    if good_dir == "up":
+        # Bad: breach below or 3-week decline
+        if breach_below or three_decline:
+            return "🔴"
+        # Good: breach above or 3-week increase
+        if breach_above or three_increase:
+            return "🟢"
+        # WoW direction
+        if this_week is not None and last_week is not None:
+            if this_week > last_week:
+                return "🟢"
+            elif this_week < last_week:
+                return "🟡"
+        return "🟢"
+
+    elif good_dir == "down":
+        # Bad: breach above or 3-week increase (TACoS going up = bad)
+        if breach_above or three_increase:
+            return "🔴"
+        # Good: breach below or 3-week decline (TACoS going down = good)
+        if breach_below or three_decline:
+            return "🟢"
+        # WoW direction (going down = good for TACoS)
+        if this_week is not None and last_week is not None:
+            if this_week < last_week:
+                return "🟢"
+            elif this_week > last_week:
+                return "🟡"
+        return "🟢"
+
+    return "🟡"
+
+
+def analyze_metric(meta, values):
+    """Run full analysis for a single metric. Returns a result dict."""
+    fmt = meta["format"]
+
+    if not values or len(values) == 0:
+        return {
+            "metric": meta["display_name"],
+            "status": "🟡",
+            "this_week": "N/A",
+            "last_week": "N/A",
+            "wow_change": "N/A",
+            "trend_4wk": "N/A",
+            "flags": {
+                "spc_breach_above": None,
+                "spc_breach_below": None,
+                "three_week_decline": False,
+                "three_week_increase": False,
+                "buy_box_below_90": None,
+            },
+            "spc": None,
+            "weeks_of_data": 0,
+        }
+
+    this_week = values[-1] if len(values) >= 1 else None
+    last_week = values[-2] if len(values) >= 2 else None
+
+    # Output columns
+    wow = compute_wow_change(this_week, last_week, fmt)
+    trend = compute_trend_4wk(values, fmt)
+
+    # Internal flags
+    spc = compute_spc(values)
+    consecutive = compute_consecutive(values)
+    buy_box_below_90 = None
+    if meta.get("threshold") is not None and this_week is not None:
+        buy_box_below_90 = this_week < meta["threshold"]
+
+    # Status signal
+    status = compute_status(meta, this_week, last_week, spc, consecutive)
+
+    return {
+        "metric": meta["display_name"],
+        "status": status,
+        "this_week": format_value(this_week, fmt),
+        "last_week": format_value(last_week, fmt),
+        "wow_change": wow,
+        "trend_4wk": trend,
+        "this_week_raw": this_week,
+        "last_week_raw": last_week,
+        "flags": {
+            "spc_breach_above": spc["spc_breach_above"] if spc else None,
+            "spc_breach_below": spc["spc_breach_below"] if spc else None,
+            "three_week_decline": consecutive["three_week_decline"],
+            "three_week_increase": consecutive["three_week_increase"],
+            "buy_box_below_90": buy_box_below_90,
+        },
+        "spc": {
+            "mean": spc["mean"],
+            "std_dev": spc["std_dev"],
+            "ucl": spc["ucl"],
+            "lcl": spc["lcl"],
+        } if spc else None,
+        "weeks_of_data": len(values),
+    }
 
 
 def main():
-    # Read input from CLI arg or stdin
     if len(sys.argv) > 1:
         raw = sys.argv[1]
     else:
@@ -127,50 +303,12 @@ def main():
         print(json.dumps({"error": f"Invalid JSON: {e}"}), file=sys.stderr)
         sys.exit(1)
 
-    metrics_history = data.get("metrics", {})
-    current_week = data.get("current_week", {})
+    results = []
+    for meta in METRICS:
+        values = data.get(meta["key"])
+        results.append(analyze_metric(meta, values))
 
-    if not metrics_history:
-        print(json.dumps({"error": "No metrics provided"}), file=sys.stderr)
-        sys.exit(1)
-
-    results = {}
-    flagged = []
-    decline_warnings = []
-
-    for name, values in metrics_history.items():
-        current = current_week.get(name)
-        if current is None:
-            continue
-
-        inverted = name in INVERTED_METRICS
-        baseline = compute_baseline(values, current, inverted)
-        results[name] = baseline
-
-        # Determine if this metric should be flagged
-        pos = baseline["position"]
-        if inverted:
-            if pos == "above_ucl":
-                flagged.append(name)
-        else:
-            if pos == "below_lcl" or pos == "above_ucl":
-                flagged.append(name)
-
-        if baseline["decline_flag"]:
-            decline_warnings.append(name)
-            if name not in flagged:
-                flagged.append(name)
-
-    output = {
-        "metrics": results,
-        "summary": {
-            "flagged_metrics": flagged,
-            "decline_warnings": decline_warnings,
-            "total_metrics": len(results),
-        },
-    }
-
-    print(json.dumps(output, indent=2))
+    print(json.dumps(results, indent=2))
 
 
 if __name__ == "__main__":
