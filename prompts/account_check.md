@@ -147,15 +147,13 @@ The script must assign a status per metric using this logic. When in doubt betwe
 
 After the script returns results, review each metric **independently** to decide if it needs a note.
 
-The internal flags (SPC breach, 3-week consecutive movement) are reasoning inputs. Use them alongside the full 12-week data shape to decide what to write in the Notes column.
-
-**Do not output these flags as labels or tags.** Instead, describe what the data shows in plain language.
+The internal flags (SPC breach, 3-week consecutive movement, Buy Box threshold) are reasoning inputs. Use them alongside the full 12-week shape to decide what to write in the Notes column. **Do not output these flags as labels or tags.** Instead, describe what the data shows in plain language.
 
 ### What to look for
 
 Look at the full 12-week shape of each metric on its own. Ask yourself: **does this metric look normal for this brand?**
 
-Example things that warrant a note:
+Things that warrant a note:
 - A value outside its normal 12-week range (this is what SPC tells you — describe the observation, don't say "SPC breach")
 - 3 consecutive weeks of decline or worsening — describe the streak, don't label it
 - Buy Box % below 90% — always note this
@@ -169,17 +167,49 @@ You are not analyzing causes or connecting metrics to each other. You are lookin
 
 - Max 150 characters
 - Start with `→`
-- One line stating **what** you see, not why or what to do
 - If no alert, leave the Notes cell empty
 - Do not fabricate — only note what the data shows
 
-### Examples of good notes
+### How to Write a Note
 
-- `→ Revenue 3x above 12-week average for 2 consecutive weeks.`
-- `→ TACoS rising for 3 straight weeks, now 12x above 12-week average.`
+Every note answers three things in one line:
+1. **What** is the metric doing (up, down, flat, at a specific value)
+2. **For how long** (3 straight weeks, last 4 weeks, this week)
+3. **Compared to what** (12-week avg, prior weeks, 90% threshold)
+
+**Fixed vocabulary — use these exact terms:**
+- Always say **"12-week avg"** — never "baseline", "mean", "historical norm", "expected range"
+- Always say **"X straight weeks"** — never "consecutive decline", "3-week trend", "sustained drop"
+- Always say **"above/below 12-week avg"** — never "SPC breach", "beyond 2 sigma", "outside control limits", "breached UCL/LCL", "statistical anomaly"
+- For Buy Box: always say **"below 90% threshold"**
+- For big gaps (2x+): use multipliers — "3x the 12-week avg"
+- For smaller gaps: use percentages — "30% above 12-week avg"
+
+**Banned words in notes:** SPC, sigma, UCL, LCL, control limit, breach, anomaly, deviation, variance, statistical, consecutive (use "straight" instead)
+
+### Note Templates
+
+Use these patterns. Pick the one that fits and fill in the numbers.
+
+| Pattern | Template |
+|---------|----------|
+| Unusually high | `→ [Metric] at [value], [X]x the 12-week avg of [avg].` |
+| Unusually low | `→ [Metric] at [value], [X]% below 12-week avg of [avg].` |
+| Sustained decline | `→ [Metric] down [X] straight weeks, from [start] to [end].` |
+| Sustained increase (bad dir) | `→ TACoS up [X] straight weeks, from [start] to [end].` |
+| Plateau below norm | `→ [Metric] flat at ~[value] for [X] weeks, was ~[higher] before.` |
+| Buy Box threshold | `→ Buy Box at [value]%, below 90% threshold.` |
+| Drop with partial recovery | `→ [Metric] dropped to [low], partial recovery to [current].` |
+| Slow drift | `→ [Metric] drifting [up/down] for [X] weeks, from [start] to [end].` |
+
+### Examples
+
+- `→ Revenue at $2,262, 3x the 12-week avg of $754.`
+- `→ TACoS up 3 straight weeks, from 5.1% to 6.9%.`
 - `→ Buy Box at 84%, below 90% threshold.`
-- `→ Sessions flat at ~620 for 4 weeks, down from ~900 in prior weeks.`
-- `→ Organic % dropped from 87% to 60% in 2 weeks, partial recovery to 71%.`
+- `→ Sessions flat at ~620 for 4 weeks, was ~900 before.`
+- `→ Organic % dropped to 60%, partial recovery to 71%.`
+- `→ CVR drifting down for 6 weeks, from 12.1% to 8.4%.`
 
 ---
 
@@ -244,6 +274,6 @@ Insert a table block after the Alerts heading on the target page:
 6. **Missing data** — if the MCP returns no data for a metric or week, show "N/A" and note `→ No data from Metrics Engine for this period.`
 7. **No investigation** — flag what changed, not why. No action items.
 8. **Table format** — exactly 7 columns (Status, Metric, This Week, Last Week, WoW Change, Trend (4wk), Notes). No SPC columns, no flag columns, no extra columns. Every run produces the same table shape.
-9. **Trend column** — always 4 data points + arrow.
+9. **Trend column** — always 4 data points + arrow. Never just an arrow.
 10. **Status colors** — 🟢 = good/healthy, 🔴 = bad/deteriorating, 🟡 = flat/watch. Colors reflect whether the metric's movement is good or bad for the business, not just whether it moved.
 11. **Buy Box %** — below 90% is always 🔴 regardless of trend.
