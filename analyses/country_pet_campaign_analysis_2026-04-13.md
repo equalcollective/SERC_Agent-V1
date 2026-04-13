@@ -1,8 +1,24 @@
-# Country Pet -- Campaign Structure & Performance Analysis
+# Strategy for Country Pet
 
-*Generated: 2026-04-13 | Data period: Feb 1 -- Apr 12, 2026*
+**Brand:** Country Pet Dog
+**Analyst:** Lakhan Bairwa
+**Generated:** 2026-04-13
+
+> **Summary placeholder** -- to be added at the end once all analysis is reviewed.
 
 ---
+
+# Original Ask
+
+> Analyse Country Pet campaign structures and give me a story: what are the campaigns -- auto/manual -- what are they targeting? How are they performing compared to last month and last-to-last month, this week and last week -- spend %. How each campaign is performing -- how different dimensions like TOS/ROS/PP are performing. Which keywords are being targeted and then see on search terms level -- top 5 keywords we are targeting and top 20 search terms (based on ~2 months).
+
+> Follow-up: Did we grow WoW from baseline revenue? If yes -- does it come from ads? If yes -- at what cost? Because our CVR gone low and CPC gone up -- how much from baseline? What's my efficiency in this new revenue I have achieved?
+
+---
+
+# Part 1: Campaign Structure & Performance Analysis
+
+*Data period: Feb 1 -- Apr 12, 2026 (note: Apr 5-11 only has 4 days of ad data through Apr 8 due to reporting lag)*
 
 ## 1. Campaign Structure Overview
 
@@ -47,7 +63,7 @@ The account is heavily weighted toward **Cod Liver Oil** -- both the manual and 
 | clo USA auto | $4.34 | $37.24 | 11.7% | 8.6x | $1.45 | 33.3% |
 | **TOTAL** | **$322.28** | **$1,155.12** | **27.9%** | **3.6x** | **$1.92** | **19.0%** |
 
-### April 2026 (MTD thru Apr 12)
+### April 2026 (MTD thru Apr 8 -- incomplete, reporting lag)
 
 | Campaign | Spend | Sales | ACOS | ROAS | CPC | CVR% |
 |----------|------:|------:|-----:|-----:|----:|-----:|
@@ -59,9 +75,9 @@ The account is heavily weighted toward **Cod Liver Oil** -- both the manual and 
 
 ### MoM Summary
 
-| Metric | Feb | Mar | Apr (MTD) | Mar vs Feb | Apr vs Mar trend |
+| Metric | Feb | Mar | Apr (partial) | Mar vs Feb | Apr vs Mar trend |
 |--------|-----|-----|-----------|------------|------------------|
-| Total Spend | $42.66 | $322.28 | $451.51 | +655% | Pacing +2.6x |
+| Total Spend | $42.66 | $322.28 | $451.51 | +655% | Pacing 2.6x |
 | Total Sales | $119.98 | $1,155.12 | $369.87 | +862% | Pacing -52% |
 | Blended ACOS | 35.6% | 27.9% | 122.1% | -7.7pp | +94.2pp |
 | Avg CPC | $1.78 | $1.92 | $3.40 | +8% | +77% |
@@ -69,42 +85,9 @@ The account is heavily weighted toward **Cod Liver Oil** -- both the manual and 
 
 ---
 
-## 3. Week-over-Week Performance
+## 3. Placement Performance (TOS / ROS / PP)
 
-### Week of Mar 29 -- Apr 4
-
-| Campaign | Spend | Sales | ACOS | CPC | CVR% |
-|----------|------:|------:|-----:|----:|-----:|
-| MB Auto CLO | $170.40 | $188.94 | 90.2% | $3.41 | 12.0% |
-| MB Manual PH x EX CLO | $138.10 | $138.96 | 99.4% | $4.32 | 12.5% |
-| MB Auto Dog Treat | $87.19 | $79.96 | 109.0% | $1.86 | 8.5% |
-| Dog Cans auto | $2.07 | $0.00 | -- | $1.04 | 0% |
-| **TOTAL** | **$397.76** | **$407.86** | **97.5%** | **$3.04** | **10.7%** |
-
-### Week of Apr 5 -- Apr 11
-
-| Campaign | Spend | Sales | ACOS | CPC | CVR% |
-|----------|------:|------:|-----:|----:|-----:|
-| MB Auto CLO | $42.92 | $37.99 | 113.0% | $3.30 | 7.7% |
-| MB Manual PH x EX CLO | $29.94 | $0.00 | -- | $4.99 | 0% |
-| MB Auto Dog Treat | $19.82 | $19.99 | 99.1% | $1.52 | 7.7% |
-| Dog Cans auto | $1.24 | $0.00 | -- | $1.24 | 0% |
-| **TOTAL** | **$93.92** | **$57.98** | **162.0%** | **$2.85** | **6.1%** |
-
-### WoW Change
-
-| Metric | Last Week | This Week | Change |
-|--------|-----------|-----------|--------|
-| Total Spend | $397.76 | $93.92 | **-76.4%** |
-| Total Sales | $407.86 | $57.98 | **-85.8%** |
-| Blended ACOS | 97.5% | 162.0% | +64.5pp |
-| CVR% | 10.7% | 6.1% | -4.6pp |
-
----
-
-## 4. Placement Performance (TOS / ROS / PP)
-
-### Overall (Feb -- Apr 12)
+### Overall (Feb -- Apr 8)
 
 | Placement | Spend | % Share | Sales | ACOS | CPC | Clicks |
 |-----------|------:|--------:|------:|-----:|----:|-------:|
@@ -119,7 +102,7 @@ The account is heavily weighted toward **Cod Liver Oil** -- both the manual and 
 |-------|:----------:|:-------:|:----------:|:-------:|:----------:|:-------:|
 | Feb | $13.13 (31%) | 10.9% | $16.42 (39%) | -- | $13.11 (31%) | -- |
 | Mar | $105.39 (33%) | 22.8% | $152.43 (47%) | 28.5% | $63.48 (20%) | 40.2% |
-| Apr MTD | $257.43 (57%) | 113.4% | $153.17 (34%) | 129.9% | $40.11 (9%) | 160.5% |
+| Apr partial | $257.43 (57%) | 113.4% | $153.17 (34%) | 129.9% | $40.11 (9%) | 160.5% |
 
 TOS spend share surged from 33% to 57% in April while ACOS exploded from 22.8% to 113.4%. All placements are unprofitable in April.
 
@@ -137,7 +120,7 @@ TOS spend share surged from 33% to 57% in April while ACOS exploded from 22.8% t
 
 ---
 
-## 5. Targeting / Keyword Analysis
+## 4. Targeting / Keyword Analysis
 
 ### Manual Campaign Keywords
 
@@ -163,7 +146,7 @@ TOS spend share surged from 33% to 57% in April while ACOS exploded from 22.8% t
 
 ---
 
-## 6. Top 20 Search Terms (Feb -- Apr 12)
+## 5. Top 20 Search Terms (Feb -- Apr 8)
 
 ### By Spend
 
@@ -209,20 +192,110 @@ Total unique search terms: **239**
 
 ---
 
-## 7. Key Takeaways
+## 6. Key Takeaways from Part 1
 
 1. **CPC inflation is the #1 problem.** Avg CPC nearly doubled from $1.92 (Mar) to $3.40 (Apr). Manual CLO CPC went from $2.57 to $4.91.
-
-2. **CVR dropped in half.** From 19% in March to 9% in April, suggesting degraded traffic quality or listing/pricing issues.
-
-3. **TOS is eating the budget.** TOS went from 33% to 57% of spend while ACOS exploded from 22.8% to 113.4%.
-
-4. **The Manual campaign keyword group collapsed.** From 32.1% ACOS (19 orders) in March to 192.4% ACOS (2 orders) in April.
-
-5. **Auto Dog Treat scaled too fast.** From $4.59 to $102.42 spend with 128% ACOS.
-
+2. **CVR dropped in half.** From 19% in March to 9% in April -- traffic quality or listing issues.
+3. **TOS eating the budget.** Grew from 33% to 57% of spend while ACOS went from 22.8% to 113.4%.
+4. **Manual campaign keyword group collapsed.** From 32.1% ACOS (19 orders) to 192.4% ACOS (2 orders).
+5. **Auto Dog Treat scaled too fast.** $4.59 -> $102.42 spend with 128% ACOS.
 6. **ASIN targets are hidden gems.** b072bg835z and b0dv9n4cjj drove $240 in sales at <2% ACOS.
-
 7. **Significant wasted spend on non-converting terms:** "cod liver oil" (generic, 154.4% ACOS), cat-related terms ($52.93 combined, poor ACOS).
+8. **Best search terms:** "pet cod liver oil" (8.9% ACOS), "cod liver oil dog" (10.9% ACOS), "cod liver oil liquid for dogs" (12.7% ACOS).
 
-8. **Best-performing search terms:** "pet cod liver oil" (8.9% ACOS), "cod liver oil dog" (10.9% ACOS), "cod liver oil liquid for dogs" (12.7% ACOS).
+---
+
+# Part 2: Revenue Growth & Efficiency Deep-Dive
+
+## Data Completeness Note
+
+Daily ad data verification revealed **Apr 5-11 only has 4 days of data (through Apr 8)** due to Amazon reporting lag. Therefore the most recent **complete** week is Mar 29 -- Apr 4.
+
+## Time Ranges Used
+
+| Label | Period | Days | Data Status |
+|-------|--------|:----:|-------------|
+| **Baseline** | Mar 1 -- Mar 28 | 28 (4 full weeks) | Complete |
+| **Last Week** | Mar 22 -- Mar 28 | 7 | Complete |
+| **Target Week** | Mar 29 -- Apr 4 | 7 | Complete |
+| *Partial (FYI only)* | *Apr 5 -- Apr 8* | *4* | *Incomplete* |
+
+## Weekly Data (all complete weeks)
+
+| Week | Total Revenue | Ad Revenue | Organic Revenue | Ad Spend | TACoS | ACOS | CPC | Ad CVR% | Sessions |
+|------|-------------:|-----------:|----------------:|---------:|------:|-----:|----:|--------:|---------:|
+| Mar 1-7 | $1,401.84 | $262.18 | $1,139.66 | $59.29 | 4.2% | 22.6% | $1.52 | 17.9% | 220 |
+| Mar 8-14 | $1,537.77 | $435.89 | $1,101.88 | $76.18 | 5.0% | 17.5% | $1.81 | 26.2% | 181 |
+| Mar 15-21 | $1,712.71 | $149.94 | $1,562.77 | $58.02 | 3.4% | 38.7% | $1.93 | 20.0% | 212 |
+| Mar 22-28 | $1,828.59 | $211.14 | $1,617.45 | $88.62 | 4.8% | 42.0% | $2.33 | 15.8% | 231 |
+| **Mar 29-Apr 4** | **$1,851.35** | **$432.85** | **$1,418.50** | **$397.76** | **21.5%** | **91.9%** | **$3.04** | **11.5%** | **344** |
+
+## Baseline vs Last Week vs Target Week
+
+| Metric | Baseline (4wk avg) | Last Week (Mar 22-28) | Target Week (Mar 29-Apr 4) | Target vs Baseline | Target vs Last Wk |
+|--------|-------------------:|----------------------:|---------------------------:|-------------------:|-------------------:|
+| **Total Revenue** | **$1,620.23** | **$1,828.59** | **$1,851.35** | **+14.3%** | **+1.2%** |
+| Ad Revenue | $264.79 | $211.14 | $432.85 | +63.5% | +105.0% |
+| Organic Revenue | $1,355.44 | $1,617.45 | $1,418.50 | +4.7% | -12.3% |
+| Ad Spend | $70.53 | $88.62 | $397.76 | +464% | +349% |
+| CPC | $1.89 | $2.33 | $3.04 | +60.6% | +30.3% |
+| Ad CVR | 20.1% | 15.8% | 11.5% | -8.7pp (-43%) | -4.3pp (-27%) |
+| ACOS | 26.6% | 42.0% | 91.9% | +65.3pp | +49.9pp |
+| TACoS | 4.4% | 4.8% | 21.5% | +17.1pp | +16.7pp |
+| Organic % | 83.7% | 88.5% | 76.6% | -7.1pp | -11.9pp |
+| Sessions | 211 | 231 | 344 | +63% | +49% |
+
+## The Story
+
+### 1. Did revenue grow from baseline?
+
+**Yes.** Target week total revenue ($1,851.35) is **+14.3% above the 4-week baseline** ($1,620.23) and +1.2% above last week ($1,828.59).
+
+### 2. Does the growth come from ads?
+
+**Mostly yes (73%).** Revenue increase decomposition:
+
+| Source | Baseline Avg | Target Week | Change | % of Growth |
+|--------|------------:|------------:|-------:|------------------:|
+| Ad Revenue | $264.79 | $432.85 | +$168.06 | **72.7%** |
+| Organic Revenue | $1,355.44 | $1,418.50 | +$63.06 | 27.3% |
+| **Total** | **$1,620.23** | **$1,851.35** | **+$231.12** | **100%** |
+
+### 3. At what cost?
+
+| | Extra Revenue Gained | Extra Spend Required | Incremental ROAS | Incremental ACOS |
+|--|---------------------:|---------------------:|-----------------:|-----------------:|
+| **Target vs Baseline** | +$168.06 | +$327.23 | **0.51x** | **194.7%** |
+
+To generate $168 more in ad revenue, we spent $327 more. **Lost $159 on the incremental ad investment.**
+
+### 4. Why efficiency broke -- CPC and CVR
+
+| Lever | Baseline | Target Week | Change | Impact |
+|-------|:--------:|:-----------:|:------:|--------|
+| CPC | $1.89 | $3.04 | **+60.6%** | Paying 60% more per click |
+| Ad CVR | 20.1% | 11.5% | **-43.0%** | Converting 43% fewer clicks |
+| Cost per ad order | $9.40 | $26.52 | **+182% (2.8x)** | Each order costs 2.8x more |
+
+### 5. TACoS -- the efficiency of new revenue
+
+| | Baseline | Last Week | Target Week |
+|--|:--------:|:---------:|:-----------:|
+| TACoS | **4.4%** | 4.8% | **21.5%** |
+| Meaning | $0.04 of every $1 to ads | $0.05 | **$0.22 of every $1 to ads** |
+
+### 6. Summary Scorecard
+
+| Question | Answer |
+|----------|--------|
+| Did total revenue grow from baseline? | **Yes, +14.3%** (+$231) |
+| Did it grow WoW (last week -> target)? | **Barely, +1.2%** (+$23) |
+| Does growth come from ads? | **Yes, 73% of growth is ad-driven** |
+| At what cost? | **Incremental ACOS = 195%.** Lost $159 on extra ad investment |
+| CPC from baseline? | **+60.6%** ($1.89 -> $3.04) |
+| CVR from baseline? | **-43.0%** (20.1% -> 11.5%) |
+| Spend from baseline? | **+464%** ($70.53 -> $397.76) |
+| TACoS? | **4.4% -> 21.5%** (+17.1pp) |
+| Was the growth efficient? | **No.** Revenue grew $231 but cost $327 extra in ads. Net: -$96 |
+
+**Bottom line:** Yes revenue grew +14.3%, but the growth was bought at a massive loss. The $231 in extra revenue cost $327 in extra ad spend. CPC surged 60%, CVR dropped 43%, and TACoS went from 4.4% to 21.5%. The revenue "growth" was value-destructive.
