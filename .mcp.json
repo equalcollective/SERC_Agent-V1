@@ -3,6 +3,10 @@
     "metrics-engine-prod-claude-code": {
       "type": "http",
       "url": "https://api.merchantbots.com/mcp/metrics-engine/mcp"
+    },
+    "seller-metrics-engine": {
+      "type": "http",
+      "url": "https://api.merchantbots.com/mcp/seller-metrics-engine/mcp"
     }
   }
 }
